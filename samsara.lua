@@ -13,18 +13,14 @@
 -- Hold K1+tap K2: Double buffer
 -- Hold K1+tap K3: Clear buffer
 --
--- v1.4.0 @21echoes
+-- v1.2.0 @21echoes
 
 local ControlSpec = require "controlspec"
 local TapTempo = include("lib/tap_tempo")
 local Alert = include("lib/alert")
-local Arcify = include("lib/arcify")
 
 -- Use the PolyPerc engine for the click track
 engine.name = 'PolyPerc'
-
-local arc_device = arc.connect()
-local arcify = Arcify.new(arc_device, false)
 
 local playing = 1
 local rec_level = 1.0
@@ -65,21 +61,7 @@ function init()
 end
 
 function init_params()
-  params:add_separator('samsara')
-  params:add {
-    id="playing",
-    name="Playing?",
-    type="binary",
-    action=function(value) set_playing(value) end
-  }
-  arcify:register("playing")
-  params:add {
-    id="recording",
-    name="Recording?",
-    type="binary",
-    action=function(value) set_recording(value) end
-  }
-  arcify:register("recording")
+  params:add_separator()
   params:add {
     id="pre_level",
     name="Feedback",
@@ -87,7 +69,6 @@ function init_params()
     controlspec=ControlSpec.new(0, 1, "lin", 0, 0.95, ""),
     action=function(value) set_pre_level(value) end
   }
-  arcify:register("pre_level")
   params:add {
     id="num_beats",
     name="Num Beats",
@@ -97,14 +78,6 @@ function init_params()
     default=8,
     action=function(value) set_num_beats(value) end
   }
-  arcify:register("num_beats")
-  params:add {
-    id="double_beats_trig",
-    name="Double Num Beats!",
-    type="trigger",
-    action=function() double_buffer() end
-  }
-  arcify:register("double_beats_trig")
   params:add {
     id="record_mode",
     name="Recording Mode",
@@ -113,7 +86,6 @@ function init_params()
     default=1,
     action=function(value) set_record_mode(value) end
   }
-  arcify:register("record_mode")
   params:add {
     id="num_input_channels",
     name="Input Mode",
@@ -122,7 +94,6 @@ function init_params()
     default=(params:get("monitor_mode") == 1 and 2 or 1),
     action=function(value) set_num_input_channels(value) end
   }
-  arcify:register("num_input_channels")
   params:add {
     id="click_track_enabled",
     name="Click Track",
@@ -130,20 +101,11 @@ function init_params()
     options={"Disabled", "Enabled"},
     default=1,
   }
-  arcify:register("click_track_enabled")
   local default_tempo_action = params:lookup_param("clock_tempo").action
   params:set_action("clock_tempo", function(value)
     default_tempo_action(value)
     set_tempo(value)
   end)
-  arcify:add_params()
-
-  arcify:map_encoder_via_params(1, "playing")
-  arcify:map_encoder_via_params(2, "recording")
-  arcify:map_encoder_via_params(3, "pre_level")
-  arcify:map_encoder_via_params(4, "num_beats")
-
-  params:read()
   params:bang()
 end
 
@@ -175,7 +137,28 @@ function init_softcut()
     softcut.rec_level(voice, rec_level)
     softcut.rec(voice, 1)
   end
-  for voice=1,2 do
+  softcut.enable(3, 1)
+  softcut.buffer(3, 1)
+  softcut.rate(3, -0.5)
+  softcut.rec(3, 0)
+  softcut.pan(3,0)
+  softcut.level(3, 1.0)
+  softcut.loop(3, 1)
+  softcut.loop_start(3,0)
+  softcut.position(3,0)
+
+  softcut.enable(4, 1)
+  softcut.buffer(4, 1)
+  softcut.rate(4, 2.0)
+  softcut.rec(4, 0)
+  softcut.pan(4,0)
+  softcut.level(4, 1.0)
+  softcut.loop(4, 1)
+  softcut.loop_start(4,0)
+  softcut.position(4,0)
+  softcut.phase_quant(4, 0.5)
+
+  for voice=1,4 do
     softcut.play(voice, playing)
   end
 end
@@ -238,7 +221,9 @@ function key(n, z)
       held_key = n
     elseif held_key == 1 and n == 2 then
       just_doubled_buffer = true
-      params:set("double_beats_trig", 1)
+      if params:get("num_beats") < MAX_NUM_BEATS then
+        double_buffer()
+      end
       return
     elseif held_key == 1 and n == 3 then
       if ext_clock_alert == nil then
@@ -280,40 +265,32 @@ function key(n, z)
       return
     end
     if playing == 1 then
-      params:set("playing", 0)
+      set_playing(0)
     else
-      params:set("playing", 1)
+      set_playing(1)
     end
   elseif n==3 and z==1 then
     -- K3 means toggle recording on/off
     if rec_level == 1.0 then
-      params:set("recording", 0)
+      -- Even if we're not in one-shot, this stops recording
+      one_shot_stop()
     else
-      params:set("recording", 1)
-    end
-  end
-end
-
-function set_recording(value)
-  if value == 0 then
-    -- Even if we're not in one-shot, this stops recording
-    one_shot_stop()
-  else
-    if params:get("record_mode") == 1 then
-      set_rec_level(1.0)
-    else
-      one_shot_start()
+      if params:get("record_mode") == 1 then
+        set_rec_level(1.0)
+      else
+        one_shot_start()
+      end
     end
   end
 end
 
 -- Clock hooks
 function clock.transport.start()
-  params:set("playing", 1)
+  set_playing(1)
 end
 
 function clock.transport.stop()
-  params:set("playing", 0)
+  set_playing(0)
 end
 
 -- Metro / Clock callbacks
@@ -328,6 +305,8 @@ function clock_tick()
         local new_position = cur_beat * clock.get_beat_sec()
         softcut.position(1, new_position)
         softcut.voice_sync(2, 1, new_position)
+        local rand_pos = math.random(num_beats) * clock.get_beat_sec()
+        softcut.position(4, rand_pos)
       end
 
       -- Play click only if enabled, and only if not currently tapping tempo
@@ -487,7 +466,7 @@ function set_playing(value)
   if value == 0 then
     pause_beat_offset = clock.get_beats() % 1
     pause_softcut_pos = (cur_beat + pause_beat_offset) * clock.get_beat_sec()
-    for voice=1,2 do
+    for voice=1,4 do
       softcut.rec_level(voice, 0.0)
       softcut.level(voice, 0.0)
       softcut.enable(voice, 0)
@@ -520,7 +499,7 @@ function set_playing(value)
           print('ERROR: Unable to properly re-sync a pause within the first beat')
         end
       end
-      for voice=1,2 do
+      for voice=1,4 do
         softcut.enable(voice, 1)
       end
       resume_after_pause_id = clock.run(function()
@@ -540,6 +519,8 @@ function _resume_playing()
     softcut.rec_level(voice, rec_level)
     softcut.level(voice, 1.0)
   end
+  softcut.level(3, 1.0)
+  softcut.level(4, 1.0)
   pause_softcut_pos = nil
   pause_beat_offset = nil
   resume_after_pause_id = nil
@@ -586,7 +567,7 @@ end
 
 function set_loop_dur(tempo, num_beats)
   loop_dur = (num_beats/tempo) * 60
-  for voice=1,2 do
+  for voice=1,4 do
     -- Not really clear why we have to set loop(0) and loop_end(large_number) to get this all working :shrug:
     -- You'd think without messing with the loop settings at all, we could have a play head that runs
     -- and which we can manipulate its position
@@ -611,7 +592,6 @@ end
 
 function one_shot_start()
   set_rec_level(1.0)
-  params:set("recording", 1, true)
   one_shot_metro = metro.init(one_shot_stop, loop_dur, 1)
   if not one_shot_metro then
     print('ERROR: Unable to stop one-shot recording')
@@ -622,7 +602,6 @@ end
 
 function one_shot_stop()
   set_rec_level(0.0)
-  params:set("recording", 0, true)
   if one_shot_metro then
     metro.free(one_shot_metro.id)
     one_shot_metro = nil
@@ -646,17 +625,13 @@ function set_num_input_channels(value)
 end
 
 function double_buffer()
-  local num_beats = params:get("num_beats")
-  local doubled_beats = num_beats * 2
-  if doubled_beats > MAX_NUM_BEATS then
-    return
-  end
   -- Duplicate the buffer immediately after the current buffer ends
   local full_path = "/home/we/dust/code/samsara/tmp.wav"
   -- Write an additional second to disk to get nice cross-fade behavior
   softcut.buffer_write_stereo(full_path, 0, loop_dur + 1)
   softcut.buffer_read_stereo(full_path, 0, loop_dur, loop_dur + 1)
-  params:set("num_beats", doubled_beats)
+  local num_beats = params:get("num_beats")
+  params:set("num_beats", num_beats * 2)
   -- Sleep is there because it takes a bit for the file system to recognize the file exists
   -- Also, os.remove doesn't work...
   os.execute("sleep 0.2; rm "..full_path)
@@ -664,7 +639,6 @@ end
 
 -- Cleanup
 function cleanup()
-  params:write()
   if screen_refresh_metro then
     metro.free(screen_refresh_metro.id)
     screen_refresh_metro = nil
