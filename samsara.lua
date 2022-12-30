@@ -15,6 +15,7 @@
 --
 -- v1.2.0 @21echoes
 
+UI = require("ui")
 local ControlSpec = require "controlspec"
 local TapTempo = include("lib/tap_tempo")
 local Alert = include("lib/alert")
@@ -51,9 +52,14 @@ local ext_clock_alert
 local ext_clock_alert_dismiss_metro
 local clear_confirm
 local click_track_square
+local tabs
+local my_titles
 
 -- Initialization
 function init()
+  my_titles = {'play', 'vol', 'div', 'shuf'}
+  tabs = UI.Tabs.new(1,my_titles)
+  
   init_params()
   init_softcut()
   init_ui_metro()
@@ -70,6 +76,22 @@ function init_params()
     action=function(value) set_pre_level(value) end
   }
   params:add {
+    id="low_loop_level",
+    name="Low Loop Level",
+    type="control",
+    controlspec=ControlSpec.new(0, 1, "lin", 0, 0.95, ""),
+    action=function(value) set_low_level(value) end
+  }
+
+  params:add {
+    id="high_loop_level",
+    name="High Loop Level",
+    type="control",
+    controlspec=ControlSpec.new(0, 1, "lin", 0, 0.95, ""),
+    action=function(value) set_high_level(value) end
+  }
+  
+  params:add {
     id="num_beats",
     name="Num Beats",
     type="number",
@@ -78,6 +100,44 @@ function init_params()
     default=8,
     action=function(value) set_num_beats(value) end
   }
+  
+  params:add {
+    id="low_div",
+    name="Mid Divisor",
+    type="number",
+    min=1,
+    max=8,
+    default=1,
+    action=function(value) set_low_div(value) end
+  }
+  
+  params:add {
+    id="high_div",
+    name="High Divisor",
+    type="number",
+    min=1,
+    max=8,
+    default=1,
+    action=function(value) set_high_div(value) end
+  }
+  
+  params:add {
+    id="norm_shuf",
+    name="Shuf Norm",
+    type="option",
+    options={"no", "yes"},
+    default=1
+  }
+  
+  params:add {
+    id="hi_shuf",
+    name="Shuf Hi",
+    type="option",
+    options={"no", "yes"},
+    default=2
+  }
+
+
   params:add {
     id="record_mode",
     name="Recording Mode",
@@ -137,6 +197,7 @@ function init_softcut()
     softcut.rec_level(voice, rec_level)
     softcut.rec(voice, 1)
   end
+  -- voice 3 is for low playing (1/2 reverse speed)
   softcut.enable(3, 1)
   softcut.buffer(3, 1)
   softcut.rate(3, -0.5)
@@ -147,6 +208,7 @@ function init_softcut()
   softcut.loop_start(3,0)
   softcut.position(3,0)
 
+  -- voice 4 is for high playing (2x forward speed)
   softcut.enable(4, 1)
   softcut.buffer(4, 1)
   softcut.rate(4, 2.0)
@@ -182,30 +244,29 @@ end
 -- Interaction hooks
 function enc(n, delta)
   if n==1 then
-    -- We're using tap_tempo:is_in_tap_tempo_mode as our general "alt mode"
-    if tap_tempo:is_in_tap_tempo_mode() then
-      if params:get("clock_source") == 1 then
-        params:delta("clock_tempo", delta)
-      else
-        show_ext_clock_alert()
-      end
-    else
-      params:delta("num_beats", delta)
-    end
+    tabs:set_index_delta(util.clamp(delta, -1, 1), false)
   elseif n==2 then
-    local pre_level = params:get("pre_level")
-    if pre_level >= 0.9 then
-      delta = delta/2
+    if tabs.index == 1 then
+      params:delta("num_beats", delta)
+    elseif tabs.index == 2 then
+      params:delta("low_loop_level", delta)
+    elseif tabs.index == 3 then
+      params:delta("low_div", delta)
+    elseif tabs.index == 4 then
+      params:delta("norm_shuf", delta)
     end
-    params:delta("pre_level", delta)
   elseif n==3 then
-    -- We're using tap_tempo:is_in_tap_tempo_mode as our general "alt mode"
-    if tap_tempo:is_in_tap_tempo_mode() then
-      params:delta("click_track_enabled", delta)
-    else
-      params:delta("record_mode", delta)
+    if tabs.index == 1 then
+      params:delta("pre_level", delta)
+    elseif tabs.index == 2 then
+      params:delta("high_loop_level", delta)
+    elseif tabs.index == 3 then
+      params:delta("high_div", delta)
+    elseif tabs.index == 4 then
+      params:delta("hi_shuf", delta)
     end
   end
+is_screen_dirty = true
 end
 
 local just_doubled_buffer = false
@@ -306,14 +367,21 @@ function clock_tick()
         softcut.position(1, new_position)
         softcut.voice_sync(2, 1, new_position)
         local rand_pos = math.random(num_beats) * clock.get_beat_sec()
-        softcut.position(4, rand_pos)
+        if params:get("hi_shuf") == "yes" then
+          softcut.position(4, rand_pos)
+        end
+        if params:get("norm_shuf") == "yes" then
+          for voice=1,2 do
+            softcut.position(voice, rand_pos)
+          end
+        end
       end
 
       -- Play click only if enabled, and only if not currently tapping tempo
-      local should_play_click = params:get("click_track_enabled") == 2 and not tap_tempo._tap_tempo_used
-      if should_play_click then
-        play_click()
-      end
+      --local should_play_click = params:get("click_track_enabled") == 2 and not tap_tempo._tap_tempo_used
+      --if should_play_click then
+      --  play_click()
+      --end
     end
 
     -- For external tempos, redraw the screen in case it's changed
@@ -361,9 +429,14 @@ function redraw()
     return
   end
 
-  local left_x = 10
-  local right_x = 118
-  local y = 12
+  tabs:redraw()
+
+  local left_x = 5
+  local mid_x1 = 35
+  local mid_x2 = 75
+  local mid_x3 = 100
+  local right_x = 110
+  local y = 20
   screen.move(left_x, y)
   screen.text("length: ")
   screen.move(right_x, y)
@@ -389,23 +462,25 @@ function redraw()
     end
   end
 
-  y = 27
+  y = 32
   screen.move(left_x, y)
-  screen.text("preserve: ")
-  screen.move(right_x, y)
-  local pre_level = params:get("pre_level")
-  if pre_level >= 0.9 then
-    screen.text_right(string.format("%.1f", pre_level * 100).."%")
-  else
-    screen.text_right(string.format("%.0f", pre_level * 100).."%")
-  end
+  screen.text("Bt:"..params:get("num_beats"))
+  screen.move(mid_x1, y)
+  screen.text("LV:"..params:get("low_loop_level"))
+  screen.move(mid_x2, y)
+  screen.text("MD:"..params:get("low_div"))
+  screen.move(mid_x3, y)
+  screen.text("MS:"..params:get("norm_shuf"))
 
-  y = 42
+  y = 45
   screen.move(left_x, y)
-  screen.text("rec mode: ")
-  screen.move(right_x, y)
-  local record_mode = params:get("record_mode")
-  screen.text_right(record_mode == 1 and "continuous" or "one-shot")
+  screen.text("pr:"..params:get("pre_level"))
+  screen.move(mid_x1, y)
+  screen.text("HV:"..params:get("high_loop_level"))
+  screen.move(mid_x2, y)
+  screen.text("HD:"..params:get("high_div"))
+  screen.move(mid_x3, y)
+  screen.text("HS:"..params:get("hi_shuf"))
 
   y = 57
   screen.move(left_x, y)
@@ -519,8 +594,8 @@ function _resume_playing()
     softcut.rec_level(voice, rec_level)
     softcut.level(voice, 1.0)
   end
-  softcut.level(3, 1.0)
-  softcut.level(4, 1.0)
+  softcut.level(3, params:get("low_loop_vol"))
+  softcut.level(4, params:get("high_loop_vol"))
   pause_softcut_pos = nil
   pause_beat_offset = nil
   resume_after_pause_id = nil
@@ -553,9 +628,33 @@ function set_pre_level(pre_level)
   is_screen_dirty = true
 end
 
+function set_high_level(pre_level)
+  voice=4
+  softcut.level(voice, pre_level)
+  is_screen_dirty = true
+end
+
+
+function set_low_level(pre_level)
+  voice=3
+  softcut.level(voice, pre_level)
+  is_screen_dirty = true
+end
+
+
 function set_num_beats(num_beats)
   local tempo = params:get("clock_tempo")
   set_loop_dur(tempo, num_beats)
+  is_screen_dirty = true
+end
+
+function set_low_div(div)
+  softcut.phase_quant(3, div)
+  is_screen_dirty = true
+end
+
+function set_high_div(div)
+  softcut.phase_quant(4, 1/div)
   is_screen_dirty = true
 end
 
