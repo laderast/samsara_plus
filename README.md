@@ -1,4 +1,30 @@
-## Samsara
+## Samsara Plus
+
+Note: original code forked from https://github.com/21echoes/samsara - I have retained the bits of doc that are still relevant.
+
+I have heavily adapted it to use three voices that playback the recorded loop.
+
+- Voice 1+2: Original 1x (stereo) loop
+- Voice 3: 1/2 speed reversed (mono) loop
+- Voice 4: 2x speed shuffled (mono) loop
+
+I have added a new UI and controls for these three voices. These use Encoder 1 to switch between parameters
+
+* E1: Move tab in menu
+* `play` tab:
+  * E2: Number of Beats (identical to Samsara)
+  * E3: Pre Level (identical to Samsara)
+* `vol` tab:
+  * E2: Low loop volume (0-1.0)
+  * E3: High loop volume (0-1.0)
+* `div` tab:
+  * E2: 1x loop clock divisor (1-8)
+  * E3: 2x loop clock divisor (1-8)
+* `shuf` tab:
+  * E2: Shuffle 1x loop (play slices in random order)
+  * E3: Shuffle 2x loop (play slices in random order)
+
+## Original Samsara Documentation
 
 Samsara is a minimalist looper that, given enough time, reaches nirvana.
 
@@ -13,6 +39,20 @@ You can also easily extend the loop. Say you have an awesome 1-bar drum pattern,
 * Audio in (stereo preferred, mono mode available in params)
 
 ### Documentation
+* E1: Move tab in menu
+* play tab:
+* E2: Number of Beats
+* E3: Pre Level
+* vol tab:
+* E2: Low loop volume
+* E3: High loop volume
+* div tab:
+* E2: 1x loop clock divisor
+*E3: 2x loop clock divisor
+* shuf tab:
+* E2: Shuffle 1x loop (play slices in random order)
+** E3: Shuffle 2x loop
+
 * E1: Number of beats
 * Hold K2+turn E1: Tempo
 * E2: Loop preserve rate
