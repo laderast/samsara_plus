@@ -2,6 +2,8 @@
 
 ![screenshot](screenshots/samsara_plus.png)
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/c6nqTYF_J-k" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 > Note: original code forked from https://github.com/21echoes/samsara - I have retained the bits of doc that are still relevant.
 
 The original samsara code is a clock synced looper for Norns. I have heavily adapted it to use three voices that playback the original recorded and sync'ed loop. The result lets you make some complex sounds with very simple loops. 
