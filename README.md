@@ -39,24 +39,9 @@ You can also easily extend the loop. Say you have an awesome 1-bar drum pattern,
 * Audio in (stereo preferred, mono mode available in params)
 
 ### Documentation
-* E1: Move tab in menu
-* play tab:
-* E2: Number of Beats
-* E3: Pre Level
-* vol tab:
-* E2: Low loop volume
-* E3: High loop volume
-* div tab:
-* E2: 1x loop clock divisor
-*E3: 2x loop clock divisor
-* shuf tab:
-* E2: Shuffle 1x loop (play slices in random order)
-** E3: Shuffle 2x loop
 
-* E1: Number of beats
-* Hold K2+turn E1: Tempo
-* E2: Loop preserve rate
-* E3: Rec. mode (loop/one-shot)
+> Note: I have retained all of the key combos. I only changed the encoder settings (see above)
+
 * K2: Start/pause playback
 * K3: Arm/disarm recording
 * Hold K2+tap K3: Tap tempo
