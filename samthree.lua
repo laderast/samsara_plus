@@ -1,4 +1,6 @@
--- Samsara Plus
+-- samthree
+--
+-- v0.0.1 @ooray
 -- A simple looper + high (x2) and 
 -- low (-1/2x) looper voices
 --  where sounds slowly decay
