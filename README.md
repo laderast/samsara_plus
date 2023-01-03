@@ -1,5 +1,7 @@
 ## Samsara Plus
 
+![screenshot](screenshots/samsara_plus.png)
+
 Note: original code forked from https://github.com/21echoes/samsara - I have retained the bits of doc that are still relevant.
 
 I have heavily adapted it to use three voices that playback the original recorded and sync'ed loop. The result lets you make some complex sounds with very simple loops. 
