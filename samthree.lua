@@ -388,7 +388,6 @@ function clock_tick()
         local rand_pos = math.random(num_beats) * clock.get_beat_sec()
         if params:get("hi_shuf") == 2  then
           softcut.position(4, rand_pos)
-          print(rand_pos)
         end
         if params:get("norm_shuf") == 2 then
           for voice=1,2 do
