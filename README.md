@@ -1,4 +1,4 @@
-## Samsara Plus
+## Samthree Audio Looper
 
 ![screenshot](screenshots/samsara_plus.png)
 
