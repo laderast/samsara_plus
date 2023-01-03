@@ -1,8 +1,21 @@
--- Samsara
--- A simple looper
+-- Samsara Plus
+-- A simple looper + high (x2) and 
+-- low (-1/2x) looper voices
 --  where sounds slowly decay
 --
--- E1: Number of beats
+-- E1: Move tab in menu
+-- play:
+-- E2: Number of Beats
+-- E3: Pre Level
+-- vol:
+-- E2: Low loop volume
+-- E3: High loop volume
+-- div:
+-- E2: 1x speed divisor
+-- E3: 2x speed divisor
+-- shuf:
+-- E2: Shuffle 1x loop
+-- E3: Shuffle 2x loop
 -- Hold K2+turn E1: Tempo
 -- E2: Loop preserve rate
 -- E3: Rec. mode (loop/one-shot)
@@ -14,6 +27,7 @@
 -- Hold K1+tap K3: Clear buffer
 --
 -- v1.2.0 @21echoes
+-- Modified by @laderast
 
 UI = require("ui")
 local ControlSpec = require "controlspec"
@@ -91,6 +105,7 @@ function init_params()
     action=function(value) set_high_level(value) end
   }
   
+  params:add_separator()
   params:add {
     id="num_beats",
     name="Num Beats",
@@ -120,7 +135,7 @@ function init_params()
     default=1,
     action=function(value) set_high_div(value) end
   }
-  
+  params:add_separator()
   params:add {
     id="norm_shuf",
     name="Shuf Norm",
@@ -137,7 +152,7 @@ function init_params()
     default=2
   }
 
-
+  params:add_separator()
   params:add {
     id="record_mode",
     name="Recording Mode",
@@ -204,6 +219,7 @@ function init_softcut()
   softcut.rec(3, 0)
   softcut.pan(3,0)
   softcut.level(3, 1.0)
+  softcut.pre_level(3, 0)
   softcut.loop(3, 1)
   softcut.loop_start(3,0)
   softcut.position(3,0)
@@ -216,6 +232,7 @@ function init_softcut()
   softcut.pan(4,0)
   softcut.level(4, 1.0)
   softcut.loop(4, 1)
+  softcut.pre_level(4, 0.5)
   softcut.loop_start(4,0)
   softcut.position(4,0)
   softcut.phase_quant(4, 0.5)
@@ -367,10 +384,11 @@ function clock_tick()
         softcut.position(1, new_position)
         softcut.voice_sync(2, 1, new_position)
         local rand_pos = math.random(num_beats) * clock.get_beat_sec()
-        if params:get("hi_shuf") == "yes" then
+        if params:get("hi_shuf") == 2  then
           softcut.position(4, rand_pos)
+          print(rand_pos)
         end
-        if params:get("norm_shuf") == "yes" then
+        if params:get("norm_shuf") == 2 then
           for voice=1,2 do
             softcut.position(voice, rand_pos)
           end
@@ -432,17 +450,39 @@ function redraw()
   tabs:redraw()
 
   local left_x = 5
-  local mid_x1 = 35
+  local mid_x1 = 38
   local mid_x2 = 75
   local mid_x3 = 100
   local right_x = 110
+
   local y = 20
+
+  if tabs.index == 1 then
+    screen.level(10)
+  end
   screen.move(left_x, y)
-  screen.text("length: ")
-  screen.move(right_x, y)
-  local tempo = params:get("clock_tempo")
-  local num_beats = params:get("num_beats")
-  screen.text_right(num_beats.." beats, "..math.floor(tempo+0.5).." bpm")
+  screen.text("Bt:"..params:get("num_beats"))
+  screen.level(5)
+
+  if tabs.index == 2 then
+    screen.level(10)
+  end
+  screen.move(mid_x1, y)
+  screen.text("LV:"..params:get("low_loop_level"))
+  screen.level(5)
+  
+  if tabs.index == 3
+    screen.level(10)
+  screen.move(mid_x2, y)
+  screen.text("MD:"..params:get("low_div"))
+  screen.level(5)
+  
+  if tabs.index == 4
+    screen.level(10)
+  end
+  screen.move(mid_x3, y)
+  screen.text("MS:"..params:get("norm_shuf"))
+  screen.level(5)
 
   if tap_tempo_square ~= nil then
     if (util.time() - tap_tempo_square) < 0.125 then
@@ -463,24 +503,44 @@ function redraw()
   end
 
   y = 32
-  screen.move(left_x, y)
-  screen.text("Bt:"..params:get("num_beats"))
-  screen.move(mid_x1, y)
-  screen.text("LV:"..params:get("low_loop_level"))
-  screen.move(mid_x2, y)
-  screen.text("MD:"..params:get("low_div"))
-  screen.move(mid_x3, y)
-  screen.text("MS:"..params:get("norm_shuf"))
-
-  y = 45
+  screen.level(5)  
+  if tabs.index == 1 then
+    screen.level(10)
+  end
   screen.move(left_x, y)
   screen.text("pr:"..params:get("pre_level"))
+  screen.level(5)  
+  
+  if tabs.index == 2 then
+    screen.level(10)
+  end
   screen.move(mid_x1, y)
   screen.text("HV:"..params:get("high_loop_level"))
+  screen.level(5)  
+
+  if tabs.index == 3 then
+    screen.level(10)
+  end
   screen.move(mid_x2, y)
   screen.text("HD:"..params:get("high_div"))
+  screen.level(5)  
+  
+  if tabs.index == 4 then
+    screen.level(10)
+  end
   screen.move(mid_x3, y)
   screen.text("HS:"..params:get("hi_shuf"))
+    screen.level(5)
+
+
+  y = 45
+
+ screen.move(left_x, y)
+  screen.text("length: ")
+  screen.move(right_x, y)
+  local tempo = params:get("clock_tempo")
+  local num_beats = params:get("num_beats")
+  screen.text_right(num_beats.." beats, "..math.floor(tempo+0.5).." bpm")
 
   y = 57
   screen.move(left_x, y)
