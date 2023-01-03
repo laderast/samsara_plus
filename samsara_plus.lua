@@ -457,32 +457,34 @@ function redraw()
 
   local y = 20
 
+  screen.level(3)
   if tabs.index == 1 then
     screen.level(10)
   end
   screen.move(left_x, y)
   screen.text("Bt:"..params:get("num_beats"))
-  screen.level(5)
+  screen.level(3)
 
   if tabs.index == 2 then
     screen.level(10)
   end
   screen.move(mid_x1, y)
   screen.text("LV:"..params:get("low_loop_level"))
-  screen.level(5)
+  screen.level(3)
   
-  if tabs.index == 3
+  if tabs.index == 3 then
     screen.level(10)
+  end
   screen.move(mid_x2, y)
   screen.text("MD:"..params:get("low_div"))
-  screen.level(5)
+  screen.level(3)
   
-  if tabs.index == 4
+  if tabs.index == 4 then
     screen.level(10)
   end
   screen.move(mid_x3, y)
   screen.text("MS:"..params:get("norm_shuf"))
-  screen.level(5)
+  screen.level(3)
 
   if tap_tempo_square ~= nil then
     if (util.time() - tap_tempo_square) < 0.125 then
@@ -509,28 +511,28 @@ function redraw()
   end
   screen.move(left_x, y)
   screen.text("pr:"..params:get("pre_level"))
-  screen.level(5)  
+  screen.level(3)  
   
   if tabs.index == 2 then
     screen.level(10)
   end
   screen.move(mid_x1, y)
   screen.text("HV:"..params:get("high_loop_level"))
-  screen.level(5)  
+  screen.level(3)  
 
   if tabs.index == 3 then
     screen.level(10)
   end
   screen.move(mid_x2, y)
   screen.text("HD:"..params:get("high_div"))
-  screen.level(5)  
+  screen.level(3)  
   
   if tabs.index == 4 then
     screen.level(10)
   end
   screen.move(mid_x3, y)
   screen.text("HS:"..params:get("hi_shuf"))
-    screen.level(5)
+    screen.level(3)
 
 
   y = 45
