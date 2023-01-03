@@ -2,27 +2,27 @@
 
 Note: original code forked from https://github.com/21echoes/samsara - I have retained the bits of doc that are still relevant.
 
-I have heavily adapted it to use three voices that playback the recorded loop.
+I have heavily adapted it to use three voices that playback the original recorded and sync'ed loop. The result lets you make some complex sounds with a very simple loops. 
 
-- Voice 1+2: Original 1x (stereo) loop
-- Voice 3: 1/2 speed reversed (mono) loop
-- Voice 4: 2x speed shuffled (mono) loop
+- **Voice 1+2**: Original 1x (stereo) loop
+- **Voice 3**: 1/2 speed reversed (mono) loop
+- **Voice 4**: 2x speed shuffled (mono) loop
 
 I have added a new UI and controls for these three voices. These use Encoder 1 to switch between parameters
 
-* E1: Move tab in menu
+* **E1**: Move tab in menu
 * `play` tab:
-  * E2: Number of Beats (identical to Samsara)
-  * E3: Pre Level (identical to Samsara)
+  * **E2**: Number of Beats (identical to Samsara)
+  * **E3**: Pre Level (identical to Samsara)
 * `vol` tab:
-  * E2: Low loop volume (0-1.0)
-  * E3: High loop volume (0-1.0)
+  * **E2**: Low loop volume (0-1.0)
+  * **E3**: High loop volume (0-1.0)
 * `div` tab:
-  * E2: 1x loop clock divisor (1-8)
-  * E3: 2x loop clock divisor (1-8)
+  * **E2**: 1x loop clock divisor (1-8)
+  * **E3**: 2x loop clock divisor (1-8)
 * `shuf` tab:
-  * E2: Shuffle 1x loop (play slices in random order)
-  * E3: Shuffle 2x loop (play slices in random order)
+  * **E2**: Shuffle 1x loop (1 normal, 2 = play slices in random order)
+  * **E3**: Shuffle 2x loop (1 normal, 2 = play slices in random order)
 
 ## Original Samsara Documentation
 
