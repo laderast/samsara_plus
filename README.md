@@ -37,3 +37,14 @@ I have added a new UI and controls for these three voices. These use Encoder 1 t
 * Hold K1+tap K3: Clear buffer
 
 Thank you very much to 21echoes for their Samsara code. This was an excellent base to learn softcut and to learn the ui and params modules.
+
+## Installing
+
+Should be available to install using the community library soon.
+
+Manually install by using the following command at the Matron prompt:
+
+```
+;install https://github.com/laderast/samthree
+```
+
