@@ -2,7 +2,7 @@
 
 ![screenshot](screenshots/samsara_plus.png)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/c6nqTYF_J-k" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+Video here: https://youtu.be/c6nqTYF_J-k
 
 > Note: original code forked from https://github.com/21echoes/samsara - I have retained the bits of doc that are still relevant.
 
