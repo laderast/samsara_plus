@@ -788,7 +788,7 @@ end
 
 function double_buffer()
   -- Duplicate the buffer immediately after the current buffer ends
-  local full_path = "/home/we/dust/code/samsara/tmp.wav"
+  local full_path = "/home/we/dust/code/samthree/tmp.wav"
   -- Write an additional second to disk to get nice cross-fade behavior
   softcut.buffer_write_stereo(full_path, 0, loop_dur + 1)
   softcut.buffer_read_stereo(full_path, 0, loop_dur, loop_dur + 1)
