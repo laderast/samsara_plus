@@ -398,9 +398,9 @@ function clock_tick()
 
       -- Play click only if enabled, and only if not currently tapping tempo
       --local should_play_click = params:get("click_track_enabled") == 2 and not tap_tempo._tap_tempo_used
-      --if should_play_click then
-      --  play_click()
-      --end
+      if should_play_click then
+        play_click()
+      end
     end
 
     -- For external tempos, redraw the screen in case it's changed
