@@ -46,7 +46,7 @@ local one_shot_metro
 local tap_tempo = TapTempo.new()
 local tap_tempo_square
 local loop_dur
-local cur_beat
+local cur_beat = 0
 local clock_tick_id
 local pause_beat_offset
 local pause_softcut_pos
@@ -70,6 +70,7 @@ local clear_confirm
 local click_track_square
 local tabs
 local my_titles
+local seq_buffer = {1,1,3,3,4,4,0,1,1,2,2,2,4,3,5}
 
 -- Initialization
 function init()
@@ -160,7 +161,7 @@ function init_params()
     name="Recording Mode",
     type="option",
     options={"Continuous", "One-Shot"},
-    default=1,
+    default=0,
     action=function(value) set_record_mode(value) end
   }
   params:add {
@@ -344,9 +345,12 @@ function key(n, z)
       just_doubled_buffer = false
       return
     end
+    print(playing)
     if playing == 1 then
       set_playing(0)
+      playing = 0
     else
+      playing = 1
       set_playing(1)
     end
   elseif n==3 and z==1 then
@@ -380,9 +384,11 @@ function clock_tick()
     if playing == 1 then
       local num_beats = params:get("num_beats")
       cur_beat = (cur_beat + 1)
-      if cur_beat >= num_beats then
-        cur_beat = cur_beat % num_beats
-        local new_position = cur_beat * clock.get_beat_sec()
+      if cur_beat <= num_beats then
+        cur_beat = cur_beat % num_beats 
+        --print(cur_beat)
+        print(seq_buffer[cur_beat + 1])
+        local new_position = seq_buffer[cur_beat+1] * clock.get_beat_sec()
         softcut.position(1, new_position)
         softcut.voice_sync(2, 1, new_position)
         local rand_pos = math.random(num_beats) * clock.get_beat_sec()
@@ -661,7 +667,7 @@ function _resume_playing()
   softcut.level(4, params:get("high_loop_vol"))
   pause_softcut_pos = nil
   pause_beat_offset = nil
-  resume_after_pause_id = nil
+  resume_after_pause_id = true
   playing = 1
   is_screen_dirty = true
 end
