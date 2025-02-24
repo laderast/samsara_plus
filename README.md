@@ -1,5 +1,7 @@
 ## Samthree Audio Looper
 
+**Note: pause/resume now working**
+
 ![screenshot](screenshots/samsara_plus.png)
 
 Video here: https://youtu.be/c6nqTYF_J-k
