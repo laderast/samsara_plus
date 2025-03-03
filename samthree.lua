@@ -70,7 +70,7 @@ local clear_confirm
 local click_track_square
 local tabs
 local my_titles
-local seq_buffer = {1,1,3,3,4,4,0,1,1,2,2,2,4,3,5}
+local seq_buffer = {1,2,3,4,5,6,7,8,9,10,11,12,12,13,14,15,16}
 
 -- Initialization
 function init()
@@ -89,7 +89,7 @@ function init_params()
     id="pre_level",
     name="Feedback",
     type="control",
-    controlspec=ControlSpec.new(0, 1, "lin", 0, 0.95, ""),
+    controlspec=ControlSpec.new(0, 1, "lin", 0, 1, ""),
     action=function(value) set_pre_level(value) end
   }
   params:add {
@@ -115,7 +115,7 @@ function init_params()
     type="number",
     min=1,
     max=MAX_NUM_BEATS,
-    default=8,
+    default=6,
     action=function(value) set_num_beats(value) end
   }
   
@@ -124,8 +124,8 @@ function init_params()
     name="Mid Divisor",
     type="number",
     min=1,
-    max=8,
-    default=1,
+    max=4,
+    default=2,
     action=function(value) set_low_div(value) end
   }
   
@@ -380,7 +380,8 @@ end
 -- Metro / Clock callbacks
 function clock_tick()
   while true do
-    clock.sync(1)
+    local div = params:get("low_div")
+    clock.sync(1/div)
     if playing == 1 then
       local num_beats = params:get("num_beats")
       cur_beat = (cur_beat + 1)
@@ -388,10 +389,10 @@ function clock_tick()
         cur_beat = cur_beat % num_beats 
         --print(cur_beat)
         print(seq_buffer[cur_beat + 1])
-        local new_position = seq_buffer[cur_beat+1] * clock.get_beat_sec()
+        local new_position = seq_buffer[cur_beat+1] * clock.get_beat_sec() / div
         softcut.position(1, new_position)
         softcut.voice_sync(2, 1, new_position)
-        local rand_pos = math.random(num_beats) * clock.get_beat_sec()
+        local rand_pos = math.random(num_beats) * clock.get_beat_sec() / div
         if params:get("hi_shuf") == 2  then
           softcut.position(4, rand_pos)
         end
@@ -408,7 +409,6 @@ function clock_tick()
         play_click()
       end
     end
-
     -- For external tempos, redraw the screen in case it's changed
     if params:get("clock_source") ~= 1 then
       is_screen_dirty = true
